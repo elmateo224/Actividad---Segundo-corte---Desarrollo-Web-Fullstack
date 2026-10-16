@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo Funcional - Ley de Haversine</title>
+  <!-- CDN de Tailwind CSS para estilos modernos -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+  <div class="max-w-4xl w-full bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8 border border-slate-700">
+    <!-- Encabezado -->
+    <header class="text-center mb-8">
+      <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-500/20">
+        Geometría Esférica & Trigonometría
+      </span>
+      <h1 class="text-3xl font-extrabold mt-3 text-white">Cálculo de Distancia Esférica</h1>
+      <p class="text-slate-400 text-sm mt-1">Implementación funcional utilizando la <strong>Fórmula de Haversine</strong></p>
+    </header>
+
+    <!-- Grid de Entradas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      
+      <!-- Punto A -->
+      <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/80">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-indigo-400 flex items-center gap-2">
+            📍 Punto A (Origen)
+          </h2>
+          <button onclick="cargarEjemplo('A', 10.96854, -74.78132)" class="text-xs text-indigo-300 hover:text-white underline">
+            Ej: Barranquilla
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Latitud (°) [de -90 a 90]</label>
+            <input type="number" id="latA" step="any" placeholder="Ej: 10.96854" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Longitud (°) [de -180 a 180]</label>
+            <input type="number" id="lonA" step="any" placeholder="Ej: -74.78132" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+      <!-- Punto B -->
+      <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/80">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+            📍 Punto B (Destino)
+          </h2>
+          <button onclick="cargarEjemplo('B', 4.7110, -74.0721)" class="text-xs text-emerald-300 hover:text-white underline">
+            Ej: Bogotá
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Latitud (°) [de -90 a 90]</label>
+            <input type="number" id="latB" step="any" placeholder="Ej: 4.7110" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Longitud (°) [de -180 a 180]</label>
+            <input type="number" id="lonB" step="any" placeholder="Ej: -74.0721" 
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Parámetro del Radio Terrestre -->
+    <div class="mb-6 bg-slate-900/40 p-4 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-400">Radio Medio de la Tierra (R)</label>
+        <span class="text-xs text-slate-500">Valor promedio aproximado en kilómetros</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="number" id="radioTierra" value="6371" class="w-28 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-center focus:outline-none focus:border-indigo-500">
+        <span class="text-sm font-semibold text-slate-400">km</span>
+      </div>
+    </div>
+
+    <!-- Botón de Cálculo -->
+    <button onclick="calcularHaversine()" 
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+      ⚡ Calcular Distancia con Haversine
+    </button>
+
+    <!-- Sección de Resultados -->
+    <div id="resultadoContainer" class="hidden mt-8 p-6 bg-indigo-950/40 border border-indigo-500/30 rounded-xl space-y-4">
+      <h3 class="text-lg font-bold text-indigo-300 border-b border-indigo-500/20 pb-2">Resultados del Cálculo:</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-900/80 p-4 rounded-lg">
+          <p class="text-xs text-slate-400">Distancia en Kilómetros</p>
+          <p class="text-2xl font-extrabold text-indigo-400 mt-1" id="resKm">0.00 km</p>
+        </div>
+        <div class="bg-slate-900/80 p-4 rounded-lg">
+          <p class="text-xs text-slate-400">Distancia en Metros</p>
+          <p class="text-2xl font-extrabold text-emerald-400 mt-1" id="resM">0 m</p>
+        </div>
+      </div>
+
+      <!-- Desglose de Pasos Matemáticos -->
+      <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Desglose de la Fórmula:</h4>
+        <ul class="text-xs font-mono text-slate-400 space-y-1">
+          <li>• &Delta;&phi; (Diferencia Latitud) = <span id="pasoDLat" class="text-indigo-300"></span> rad</li>
+          <li>• &Delta;&lambda; (Diferencia Longitud) = <span id="pasoDLon" class="text-indigo-300"></span> rad</li>
+          <li>• a = sin²(&Delta;&phi;/2) + cos(&phi;₁) · cos(&phi;₂) · sin²(&Delta;&lambda;/2) = <span id="pasoA" class="text-indigo-300"></span></li>
+          <li>• c = 2 · atan2( &radic;a, &radic;(1-a) ) = <span id="pasoC" class="text-indigo-300"></span> rad</li>
+          <li>• d = R · c = <span id="pasoD" class="text-indigo-300"></span> km</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    
+    // Convertidor de Grados a Radianes
+    const toRad = (grados) => (grados * Math.PI) / 180;
+
+    // Función principal para la Fórmula de Haversine
+    function calcularHaversine() {
+      // 1. Obtener valores de entrada
+      const lat1 = parseFloat(document.getElementById('latA').value);
+      const lon1 = parseFloat(document.getElementById('lonA').value);
+      const lat2 = parseFloat(document.getElementById('latB').value);
+      const lon2 = parseFloat(document.getElementById('lonB').value);
+      const R = parseFloat(document.getElementById('radioTierra').value) || 6371;
+
+      // Validación simple
+      if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+        alert("Por favor ingresa coordenadas válidas en todos los campos.");
+        return;
+      }
+
+      // 2. Convertir coordenadas a Radianes
+      const phi1 = toRad(lat1);
+      const phi2 = toRad(lat2);
+      const dPhi = toRad(lat2 - lat1);
+      const dLambda = toRad(lon2 - lon1);
+
+      // 3. Aplicar la Fórmula de Haversine
+      // a = sin²(Δφ/2) + cos(φ1) · cos(φ2) · sin²(Δλ/2)
+      const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+
+      // c = 2 · atan2( √a, √(1-a) )
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      // d = R · c
+      const d = R * c; // Distancia en km
+
+      // 4. Mostrar resultados en pantalla
+      document.getElementById('resKm').innerText = `${d.toFixed(2)} km`;
+      document.getElementById('resM').innerText = `${(d * 1000).toLocaleString('es-CO', {maximumFractionDigits: 1})} m`;
+
+      // Mostrar valores del paso a paso matemático
+      document.getElementById('pasoDLat').innerText = dPhi.toFixed(6);
+      document.getElementById('pasoDLon').innerText = dLambda.toFixed(6);
+      document.getElementById('pasoA').innerText = a.toFixed(6);
+      document.getElementById('pasoC').innerText = c.toFixed(6);
+      document.getElementById('pasoD').innerText = d.toFixed(2);
+
+      document.getElementById('resultadoContainer').classList.remove('hidden');
+    }
+
+    // Función auxiliar para cargar coordenadas de prueba rápidas
+    function cargarEjemplo(punto, lat, lon) {
+      if (punto === 'A') {
+        document.getElementById('latA').value = lat;
+        document.getElementById('lonA').value = lon;
+      } else {
+        document.getElementById('latB').value = lat;
+        document.getElementById('lonB').value = lon;
+      }
+    }
+  </script>
+</body>
+</html>
